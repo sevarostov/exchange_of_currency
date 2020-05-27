@@ -7,3 +7,7 @@
 - курс по API с binance.com - парсер курса реализован в виде Symfony Service
 
 Подключен SonataAdminBundle - возможность просматривать листинг созданных платежей, менять у него статус.
+
+Демо: https://svetlana-kartysh.ru/exchange/
+
+
