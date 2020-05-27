@@ -1,0 +1,214 @@
+{% extends '@Portal/base.html.twig' %}
+
+{% block title %} Exchange of currency / Обмен валют {% endblock %}
+{% block body %}
+
+	<div class="main">
+
+		<div class="calculator">
+			<h1>CryptoCurrency Converter / Конвертер Криптовалют</h1>
+			<div class="convert">
+
+				<div class="col">
+					<span class="label">Из</span>
+					<select aria-label="From" id="from">
+						<option>USD</option>
+						<option>BTC</option>
+					</select>
+				</div>
+				<div class="col">
+					<span class="label">В</span>
+					<select aria-label="To" id="to">
+						<option>BTC</option>
+						<option>USD</option>
+					</select>
+				</div>
+				<form name="exchange" class="form">
+					<div class="values">
+						<div class="col">
+							<input aria-label="amount" type="number" min="1" max="999999" id="amount"
+							       placeholder="Количество" required
+							       value="">
+						</div>
+						<div class="col">
+
+							<span class="variation " aria-hidden="true"></span>
+
+
+							<input aria-label="Result" type="text" id="result" readonly placeholder="Результат"
+							       value="">
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="container">
+			<div class="text-right" style="margin-top: -30px;">
+				<button id="payment" class="btn btn-xs btn-outline-info">
+					Совершить операцию
+				</button>
+			</div>
+			<div class="table-responsive">
+				<table class="table-stripped">
+					<thead>
+					<tr>
+						<th>#</th>
+						<th data-key="nameIndex" class="showSortMark" style="width:150px">
+							<div class="i4oece-2 leSAgJ">Наименование<span class="i4oece-1 fkizBg"><i
+											class="iconfont icon-sort_desc s1xv7c9m-0 awGMA" type="sort_desc" size="16"
+											color=""></i></span></div>
+						</th>
+						<th data-key="price" class="showSortMark" style="width:110px">
+							<div class="i4oece-4 lenOXd">Цена<span class="i4oece-1 fkizBg"><i
+											class="iconfont icon-sort_desc s1xv7c9m-0 awGMA" type="sort_desc" size="16"
+											color=""></i></span></div>
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr>
+						<td style="width:34px">1</td>
+						<td style="width:150px">
+							<div class="s7v36e6-0 iilQaX"><img class="avatar" alt=""
+							                                   src="../img/btc.png">
+								<div class="name"><span class="abbr">BTC</span><span class="fullName">Bitcoin</span>
+								</div>
+							</div>
+						</td>
+						<td style="width:110px">
+							<div class="s1udte2x-1 fZIDRW">
+								<div id="price"
+								     class="s1udte2x-0 gjIcSm">{% if trade is defined %}${{ trade|round(0) }}{% endif %}</div>
+							</div>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+	</div>
+
+
+	<div class="modal fade payment" role="dialog">
+		<div class="modal-dialog">
+			<form name="payment">
+				<div class="modal-content" style="width: 620px;">
+					<div class="modal-header bg-success">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Введите ваши данные </h4>
+					</div>
+					<div class="modal-body">
+						<div class="form-group">
+							<input required class="form-control" type="text" name="text" id="name" placeholder="ФИО">
+						</div>
+						<div class="form-group">
+							<input required class="form-control" type="text" name="address" id="address"
+							       placeholder="100100, г.Москва, ул.А.Сахарова, д.5">
+						</div>
+					</div>
+					<div class="modal-footer">
+						<div class="container-fluid">
+							<div class="row">
+								<div class="col-lg-7">
+									<h4>Внимание!</h4>
+									<p style="font-size: 9px;">Проверьте введенные данные.</p>
+								</div>
+								<div class="col-lg-5">
+									<button type="submit" class="btn btn-success save">Подтвердить</button>
+									<button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script>
+		$(document).ready(function () {
+
+			$("#amount").on("change", function (e) {
+				e.preventDefault();
+
+				if ($('#amount').val() == '') {
+					$.notify("Введите данные!", "error");
+					return;
+				}
+
+				$.post('{{ path('api_exchange_result') }}', {
+					amount: $('#amount').val(),
+					from: $('#from').val(),
+					to: $('#to').val(),
+				})
+					.done(function (data) {
+						if (
+							(typeof data.status == 'undefined') ||
+							(data.status != 200)
+						) {
+							return;
+						}
+
+						$('#result').val(data.result);
+					})
+					.fail(function () {
+						$.notify("Произошла ошибка!", "error");
+						return;
+					})
+				;
+			});
+
+
+			$("#payment").click(function (e) {
+				if ($('#amount').val() == '') {
+					$.notify("Введите данные!", "error");
+					return;
+				}
+
+				$('.modal.payment').modal('show');
+
+				$('.modal.payment button[type=submit]').click(function (e) {
+
+					e.preventDefault();
+					if (($('#name').val() == '') | ($('#address').val() == '')) {
+						$.notify("Введите имя/адрес!", "error");
+						return;
+					}
+
+					$.post('{{ path('api_exchange_payment') }}', {
+						amount: $('#amount').val(),
+						from: $('#from').val(),
+						to: $('#to').val(),
+						name: $('#name').val(),
+						address: $('#address').val(),
+					})
+						.done(function (data) {
+							if (
+								(typeof data.status == 'undefined') ||
+								(data.status != 200)
+							) {
+
+								$.notify("Операция выполнена!", "success");
+								$('.modal.payment').modal('hide');
+								return;
+							}
+
+							$.notify("Операция выполнена!", "success");
+							$('.modal.payment').modal('hide');
+						})
+						.fail(function () {
+
+							$.notify("Произошла ошибка!", "error");
+							return;
+						})
+					;
+				});
+
+
+			})
+		});
+	</script>
+
+{% endblock %}
+
